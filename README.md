@@ -1,18 +1,252 @@
-# Rettiwt-API
+# @youmind-openlab/rettiwt-api
 
-A CLI tool and an API for fetching data from Twitter for free!
+YouMind Open Lab fork - An API for fetching data from Twitter/X, **with browser extension support!**
+
+This is a fork of [Rettiwt-API](https://github.com/Rishikant181/Rettiwt-API) that adds browser extension compatibility. You can now use this library directly in browser extensions without needing to pass API keys - it automatically retrieves authentication from browser cookies.
+
+## What's New in This Fork
+
+- 🌐 **Browser Extension Support** - Use directly in Chrome/Firefox extensions
+- 🔐 **Automatic Cookie Authentication** - No need to manually extract API keys
+- 📦 **Separate Browser Entry Point** - Import from `@youmind-openlab/rettiwt-api/browser`
+- ✨ **Zero Configuration** - Just `new RettiwtBrowser()` and you're ready to go
+
+## Installation
+
+```bash
+npm install @youmind-openlab/rettiwt-api
+```
+
+## Quick Start
+
+### For Browser Extensions
+
+```typescript
+import { RettiwtBrowser } from '@youmind-openlab/rettiwt-api/browser';
+
+const rettiwt = new RettiwtBrowser();
+
+// Check if user is logged in to X.com
+if (await rettiwt.isLoggedIn()) {
+  // Initialize and verify authentication
+  const user = await rettiwt.initialize();
+  console.log(`Logged in as: ${user.userName}`);
+
+  // Fetch bookmarks
+  const bookmarks = await rettiwt.user.bookmarks(20);
+  console.log(`Found ${bookmarks.list.length} bookmarks`);
+
+  // Search tweets
+  const results = await rettiwt.tweet.search({ includeWords: ['javascript'] }, 20);
+  console.log(`Found ${results.list.length} tweets`);
+}
+```
+
+### For Node.js (Original Usage)
+
+```typescript
+import { Rettiwt } from '@youmind-openlab/rettiwt-api';
+
+// Guest authentication (limited access)
+const rettiwt = new Rettiwt();
+
+// User authentication (full access)
+const rettiwt = new Rettiwt({ apiKey: 'YOUR_API_KEY' });
+
+// Fetch user details
+const user = await rettiwt.user.details('elonmusk');
+console.log(user);
+```
+
+## Browser Extension Usage
+
+### Prerequisites
+
+Your browser extension needs the following permissions in `manifest.json`:
+
+```json
+{
+  "manifest_version": 3,
+  "permissions": ["cookies"],
+  "host_permissions": [
+    "https://*.x.com/*",
+    "https://*.twitter.com/*"
+  ]
+}
+```
+
+### RettiwtBrowser API
+
+#### `isLoggedIn(): Promise<boolean>`
+
+Checks if the user is logged in to X.com by checking for required cookies. **Does NOT make any API calls.**
+
+```typescript
+const rettiwt = new RettiwtBrowser();
+if (await rettiwt.isLoggedIn()) {
+  // User is logged in
+}
+```
+
+#### `initialize(): Promise<User>`
+
+Initializes the library and verifies authentication. Must be called before using other methods.
+
+```typescript
+const rettiwt = new RettiwtBrowser();
+const user = await rettiwt.initialize();
+console.log(`Welcome, ${user.fullName}!`);
+```
+
+#### Available Services
+
+After initialization, you can access:
+
+- `rettiwt.user` - User-related operations (bookmarks, followers, following, etc.)
+- `rettiwt.tweet` - Tweet-related operations (search, details, like, retweet, etc.)
+- `rettiwt.list` - List-related operations
+- `rettiwt.dm` - Direct message operations
+
+### Example: Fetching Bookmarks with Pagination
+
+```typescript
+import { RettiwtBrowser, Tweet } from '@youmind-openlab/rettiwt-api/browser';
+
+const rettiwt = new RettiwtBrowser();
+await rettiwt.initialize();
+
+const allBookmarks: Tweet[] = [];
+let cursor: string | undefined;
+
+do {
+  const result = await rettiwt.user.bookmarks(20, cursor);
+  allBookmarks.push(...result.list);
+  cursor = result.next || undefined;
+} while (cursor);
+
+console.log(`Total bookmarks: ${allBookmarks.length}`);
+```
+
+### Example: Searching Tweets
+
+```typescript
+const results = await rettiwt.tweet.search({
+  includeWords: ['typescript', 'react'],
+  fromUsers: ['dan_abramov'],
+  minLikes: 100
+}, 20);
+
+for (const tweet of results.list) {
+  console.log(`@${tweet.tweetBy?.userName}: ${tweet.fullText}`);
+}
+```
+
+### Configuration Options
+
+```typescript
+const rettiwt = new RettiwtBrowser({
+  timeout: 30000,      // Request timeout in ms
+  logging: true,       // Enable debug logging
+  maxRetries: 5,       // Retries on 404 errors (default: 5)
+  delay: 1000,         // Delay between requests in ms
+});
+```
+
+## Building Your Own Extension
+
+### 1. Set up webpack for browser bundling
+
+```javascript
+// webpack.config.js
+const webpack = require('webpack');
+
+module.exports = {
+  entry: './src/popup.ts',
+  output: {
+    filename: 'popup.js',
+    path: __dirname + '/dist',
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+    fallback: {
+      fs: false,
+      path: false,
+      crypto: false,
+      stream: require.resolve('stream-browserify'),
+      buffer: require.resolve('buffer/'),
+    },
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+    }),
+  ],
+  module: {
+    rules: [
+      { test: /\.ts$/, use: 'ts-loader', exclude: /node_modules/ },
+    ],
+  },
+};
+```
+
+### 2. Install browser polyfills
+
+```bash
+npm install --save-dev buffer stream-browserify
+```
+
+### 3. Create your extension popup
+
+```typescript
+// popup.ts
+import { RettiwtBrowser } from '@youmind-openlab/rettiwt-api/browser';
+
+async function main() {
+  const rettiwt = new RettiwtBrowser();
+
+  if (!(await rettiwt.isLoggedIn())) {
+    document.body.innerHTML = '<p>Please log in to X.com first</p>';
+    return;
+  }
+
+  const user = await rettiwt.initialize();
+  document.body.innerHTML = `<p>Welcome, ${user.fullName}!</p>`;
+}
+
+main();
+```
+
+## Exported Types
+
+The browser entry point exports the following:
+
+```typescript
+import {
+  RettiwtBrowser,        // Main browser class
+  User,                  // User data type
+  Tweet,                 // Tweet data type
+  CursoredData,          // Paginated response type
+  // ... and more
+} from '@youmind-openlab/rettiwt-api/browser';
+```
+
+---
+
+# Original Rettiwt-API Documentation
+
+The sections below are from the original Rettiwt-API documentation for Node.js usage.
 
 ## Prerequisites
 
 - NodeJS 22
 - A working Twitter account (optional)
 
-## Installation
+## Installation (CLI)
 
 It is recommended to install the package globally, if you want to use it from the CLI. Use the following steps to install the package and ensure it's installed correctly:
 
 1. Open a terminal.
-2. Install the package using the command `npm install -g rettiwt-api`.
+2. Install the package using the command `npm install -g @youmind-openlab/rettiwt-api`.
 3. Check if the package is installed correctly using the command `rettiwt help`.
 
 For using the package in your own project, you can install it as a [dependency](https://rishikant181.github.io/Rettiwt-API/#md:usage-as-a-dependency).
@@ -111,21 +345,15 @@ The API_KEY generated by logging in is what allows Rettiwt-API to authenticate a
 - The API_KEY is actually a base64 encoding of the account's cookies.
 - The API_KEY provides the same level of authorization as any standard Twitter account, nothing more, nothing less.
 
-## Notes for non-programmers
-
-- If you have no idea of programming, it's recommended to use the CLI.
-- The CLI provides an easy to use interface which does not require any knowledge of JavaScript or programming
-- Please skip to [CLI-Usage](https://rishikant181.github.io/Rettiwt-API/#md:cli-usage) for details.
-
 ## Usage as a dependency
 
 Rettiwt-API can be used as a dependency for your NodeJS project. In such a case, it is not required to install Rettiwt-API globally and you may install it locally in the root of your project using the command:
 
-- `npm install --save rettiwt-api` (using npm)
+- `npm install --save @youmind-openlab/rettiwt-api` (using npm)
 
     or
 
-- `yarn add rettiwt-api` (using yarn)
+- `yarn add @youmind-openlab/rettiwt-api` (using yarn)
 
 However, in this case, for accessing the CLI, you will be required to prepend the CLI commands with `npx` in order to tell NodeJS to use the locally installed package.
 
@@ -167,34 +395,12 @@ Of these parameters, the following are hot-swappable, using their respective set
 - `headers`
 - `proxyUrl`
 
-The following example demonstrates changing the API key on the fly:
-
-```ts
-import { Rettiwt } from 'rettiwt-api';
-
-// Initializing a new Rettiwt instance with API key 1
-const rettiwt = new Rettiwt({ apiKey: '<API_KEY_1>' });
-
-rettiwt.user.details().then((res) => {
-	console.log(res); // Returns details of the user associated with API_KEY_1
-});
-
-// Changing API key to API key 2
-rettiwt.apiKey = '<API_KEY_2>';
-
-rettiwt.user.details().then((res) => {
-	console.log(res); // Returns details of the user associated with API_KEY_2
-});
-```
-
-## Usage
-
-The following examples may help you to get started using the library:
+## Usage Examples
 
 ### 1. Getting the details of a target Twitter user
 
 ```ts
-import { Rettiwt } from 'rettiwt-api';
+import { Rettiwt } from '@youmind-openlab/rettiwt-api';
 
 // Creating a new Rettiwt instance
 // Note that for accessing user details, 'guest' authentication can be used
@@ -203,17 +409,17 @@ const rettiwt = new Rettiwt();
 // Fetching the details of the user whose username is <username>
 rettiwt.user.details('<username>')
 .then(details => {
-	...
+	console.log(details);
 })
 .catch(error => {
-	...
+	console.error(error);
 });
 ```
 
 ### 2. Getting the list of tweets that match a given filter
 
 ```ts
-import { Rettiwt } from 'rettiwt-api';
+import { Rettiwt } from '@youmind-openlab/rettiwt-api';
 
 // Creating a new Rettiwt instance using the API_KEY
 const rettiwt = new Rettiwt({ apiKey: API_KEY });
@@ -228,10 +434,10 @@ rettiwt.tweet.search({
 	includeWords: ['<word1>', '<word2>']
 })
 .then(data => {
-	...
+	console.log(data);
 })
 .catch(err => {
-	...
+	console.error(err);
 });
 ```
 
@@ -239,10 +445,8 @@ For more information regarding the different available filter options, please re
 
 ### 3. Getting the next batch of data using a cursor
 
-The previous example fetches the the list of tweets matching the given filter. Since no count is specified, in this case, a default of 20 such Tweets are fetched initially. The following example demonstrates how to use the [cursor string](https://rishikant181.github.io/Rettiwt-API/classes/Cursor.html#value) obtained from the [response](https://rishikant181.github.io/Rettiwt-API/classes/CursoredData.html) object's [next](https://rishikant181.github.io/Rettiwt-API/classes/CursoredData.html#next) field, from the previous example, to fetch the next batch of tweets:
-
 ```ts
-import { Rettiwt } from 'rettiwt-api';
+import { Rettiwt } from '@youmind-openlab/rettiwt-api';
 
 // Creating a new Rettiwt instance using the API_KEY
 const rettiwt = new Rettiwt({ apiKey: API_KEY });
@@ -261,67 +465,12 @@ rettiwt.tweet.search({
 	includeWords: ['<word1>', '<word2>']
 }, count, data.next.value)
 .then(data => {
-	...
+	console.log(data);
 })
 .catch(err => {
-	...
+	console.error(err);
 });
 ```
-
-### 4. Getting an API_KEY during runtime, using 'user' authentication (Borked)
-
-Sometimes, you might want to generate an API_KEY on the fly, in situations such as implementing Twitter login in your application. The following example demonstrates how to generate an API_KEY during runtime:
-
-```ts
-import { Rettiwt } from 'rettiwt-api';
-
-// Creating a new Rettiwt instance
-const rettiwt = new Rettiwt();
-
-// Logging in an getting the API_KEY
-rettiwt.auth.login('<email>', '<username>', '<password>')
-.then(apiKey => {
-    // Use the API_KEY
-	...
-})
-.catch(err => {
-	console.log(err);
-});
-```
-
-Where,
-
-- `<email>` is the email associated with the Twitter account to be logged into.
-- `<username>` is the username associated with the Twitter account.
-- `<password>` is the password to the Twitter account.
-
-## Using a custom error handler
-
-Out of the box, `Rettiwt`'s error handling is bare-minimum, only able to parse basic error messages. For advanced scenarios, where full error response might be required, in order to diagnose error reason, it's recommended to use a custom error handler, by implementing the `IErrorHandler` interface, as follows:
-
-```ts
-import { Rettiwt, IErrorHandler } from 'rettiwt-api';
-
-// Implementing an error handler
-class CustomErrorHandler implements IErrorHandler {
-	/**
-	 * This is where you handle the error yourself.
-	 */
-	public handler(error: unknown): void {
-		// The 'error' variable has the full, raw error response returned from Twitter.
-		/**
-		 * You custom error handling logic goes here
-		 */
-
-		console.log(`Raw Twitter Error: ${JSON.stringify(error)}`);
-	}
-}
-
-// Now we'll use the implemented error handler while initializing Rettiwt
-const rettiwt = new Rettiwt({ apiKey: '<API_KEY>', errorHandler: CustomErrorHandler });
-```
-
-You can then use the created `rettiwt` instance and your custom error handler will handler all the error responses, bypassing `Rettiwt`'s error handling logic.
 
 ## Using a proxy
 
@@ -347,194 +496,6 @@ Sometimes, when the library shows unexpected behaviour, for troubleshooting purp
 const rettiwt = new Rettiwt({ apiKey: API_KEY, logging: true });
 ```
 
-## Accessing raw response
-
-For getting the raw data instead of the parsed results, all data models provide a getter `raw` which returns the raw data entity as returned by Twitter, instead of parsing them to Rettiwt's own data entity formats. The following example demonstrates the use of the `raw` getter:
-
-```ts
-import { Rettiwt } from 'rettiwt-api';
-
-// Creating a new Rettiwt instance
-// Note that for accessing user details, 'guest' authentication can be used
-const rettiwt = new Rettiwt();
-
-// Fetching the details of the user whose username is <username>
-rettiwt.user.details('<username>')
-.then(details => {
-	console.log(details);
-    // {
-    //     "createdAt": "2021-07-24T14:25:32.000Z",
-    //     "description": "Coder, Gamer and Tech Enthusiast",
-    //     "followersCount": 3,
-    //     "followingsCount": 44,
-    //     "fullName": "Rishikant Sahu",
-    //     "id": "1418940387037782018",
-    //     "isVerified": false,
-    //     "likeCount": 762,
-    //     "profileImage": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
-    //     "statusesCount": 5,
-    //     "userName": "negmatico"
-    // }
-
-    console.log(details.raw);
-    // {
-    //     "__typename": "User",
-    //     "id": "VXNlcjoxNDE4OTQwMzg3MDM3NzgyMDE4",
-    //     "rest_id": "1418940387037782018",
-    //     "affiliates_highlighted_label": {},
-    //     "has_graduated_access": true,
-    //     "is_blue_verified": false,
-    //     "legacy": {
-    //         "following": false,
-    //         "can_dm": true,
-    //         "can_media_tag": true,
-    //         "created_at": "Sat Jul 24 14:25:32 +0000 2021",
-    //         "default_profile": true,
-    //         "default_profile_image": true,
-    //         "description": "Coder, Gamer and Tech Enthusiast",
-    //         "entities": { "description": { "urls": [] } },
-    //         "fast_followers_count": 0,
-    //         "favourites_count": 762,
-    //         "followers_count": 3,
-    //         "friends_count": 44,
-    //         "has_custom_timelines": false,
-    //         "is_translator": false,
-    //         "listed_count": 0,
-    //         "location": "",
-    //         "media_count": 0,
-    //         "name": "Rishikant Sahu",
-    //         "needs_phone_verification": false,
-    //         "normal_followers_count": 3,
-    //         "pinned_tweet_ids_str": [],
-    //         "possibly_sensitive": false,
-    //         "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png",
-    //         "profile_interstitial_type": "",
-    //         "screen_name": "negmatico",
-    //         "statuses_count": 5,
-    //         "translator_type": "none",
-    //         "verified": false,
-    //         "want_retweets": false,
-    //         "withheld_in_countries": []
-    //     },
-    //     "parody_commentary_fan_label": "None",
-    //     "profile_image_shape": "Circle",
-    //     "tipjar_settings": {},
-    //     "verified_phone_status": false,
-    //     "legacy_extended_profile": {
-    //         "birthdate": { "day": 18, "month": 1, "year": 2001, "visibility": "Self", "year_visibility": "Self" }
-    //     },
-    //     "is_profile_translatable": false,
-    //     "has_hidden_subscriptions_on_profile": false,
-    //     "verification_info": { "is_identity_verified": false },
-    //     "highlights_info": { "can_highlight_tweets": false, "highlighted_tweets": "0" },
-    //     "user_seed_tweet_count": 0,
-    //     "premium_gifting_eligible": true,
-    //     "business_account": {},
-    //     "creator_subscriptions_count": 0
-    // }
-
-})
-.catch(error => {
-	...
-});
-```
-
-However, if further control over the raw response is required, Rettiwt-API provides the [`FetcherService`](https://rishikant181.github.io/Rettiwt-API/classes/FetcherService.html) class which provides direct access to the raw response, but keep in mind, this delegates the task of parsing and filtering the results to the consumer of the library. The following example demonstrates using the `FetcherService` class:
-
-```ts
-import { RettiwtConfig, FetcherService, ResourceType, IUserDetailsResponse } from 'rettiwt-api';
-
-// Creating the configuration for Rettiwt
-const config = new RettiwtConfig({ apiKey: '<API_KEY>' });
-
-// Creating a new FetcherService instance using the config
-const fetcher = new FetcherService(config);
-
-// Fetching the details of the given user
-fetcher
-	.request<IUserDetailsResponse>(ResourceType.USER_DETAILS_BY_USERNAME, { id: 'user1' })
-	.then((res) => {
-		console.log(res);
-	})
-	.catch((err) => {
-		console.log(err);
-	});
-```
-
-As demonstrated by the example, the raw data can be accessed by using the `request` method of the `FetcherService` class, which takes two parameters. The first parameter is the name of the requested resource, while the second is an object specifying the associated arguments required for the given resource. The complete list of resource type can be checked [here](https://rishikant181.github.io/Rettiwt-API/enums/AuthService.html#ResourceType). As for the resource specific argurments, they are the same as that of the methods of `Rettiwt` class' methods for the respective resources, but structured as an object. Notice how the `FetcherService` class takes the same arguments as the `Rettiwt` class, and the arguments have the same effects as they have in case of `Rettiwt` class.
-
-#### Notes:
-
-- For for hot-swapping in case of using `FetcherService`, the setters are accessed from the `config` object as `config.apiKey = ...`, `config.proxyUrl = ...`, etc.
-
-## Data serialization
-
-The data returned by all functions of `Rettiwt` are complex objects, containing non-serialized fields like `raw`. In order to get JSON-serializable data, all data objects returned by `Rettiwt` provide a function `toJSON()` which converts the data into a serializable JSON, whose type is described by their respective interfaces i.e, `ITweet` for `Tweet`, `IUser` for `User` and so on.
-
-For handling and processing of data returned by the functions, it's always advisable to serialize them using the `toJSON()` function.
-
-## Features
-
-So far, the following operations are supported:
-
-### Direct Messages
-
-- [Getting the DM inbox](https://rishikant181.github.io/Rettiwt-API/classes/DirectMessageService.html#inbox)
-- [Getting a specific conversation with full message history](https://rishikant181.github.io/Rettiwt-API/classes/DirectMessageService.html#conversation)
-- [Deleting a conversation](https://rishikant181.github.io/Rettiwt-API/classes/DirectMessageService.html#deleteConversation)
-
-### List
-
-- [Adding a member to a given Twitter list](https://rishikant181.github.io/Rettiwt-API/classes/ListService.html#addMember)
-- [Getting the details of a given Twitter list](https://rishikant181.github.io/Rettiwt-API/classes/ListService.html#details)
-- [Getting the members of a given Twitter list](https://rishikant181.github.io/Rettiwt-API/classes/ListService.html#members)
-- [Removing a member from a given Twitter list](https://rishikant181.github.io/Rettiwt-API/classes/ListService.html#removeMember)
-- [Getting the list of tweets from a given Twitter list](https://rishikant181.github.io/Rettiwt-API/classes/ListService.html#tweets)
-
-### Tweets
-
-- [Bookmarking a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#bookmark)
-- [Getting the details of a tweet/multiple tweets](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#details)
-- [Liking a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#like)
-- [Getting the list of users who liked your tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#likers)
-- [Posting a new tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#post)
-- [Getting the list of replies to a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#replies)
-- [Retweeting a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#retweet)
-- [Getting the list of users who retweeted a given tweet by the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#retweeters)
-- [Scheduling a new tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#schedule)
-- [Searching for the list of tweets that match a given filter](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#search)
-- [Streaming filtered tweets in pseudo-realtime](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#stream)
-- [Unbookmarking a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#unbookmark)
-- [Unliking a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#unlike)
-- [Unposting a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#unpost)
-- [Unretweeting a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#unretweet)
-- [Unscheduling a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#unschedule)
-- [Uploading a media file for a tweet](https://rishikant181.github.io/Rettiwt-API/classes/TweetService.html#upload)
-
-### Users
-
-- [Getting the list of users affiliated with the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#affiliates)
-- [Getting the analytics of the logged-in user (premium accounts only)](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#analytics)
-- [Getting the list of tweets bookmarked by the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#bookmarks)
-- [Getting the list of bookmark folders of the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#bookmarkFolders)
-- [Getting the list of tweets in a specific bookmark folder](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#bookmarkFolderTweets)
-- [Getting the details of a user/multiple users](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#details)
-- [Following a given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#follow)
-- [Getting the followed feed of the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#followed)
-- [Getting the list of users who follow the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#followers)
-- [Getting the list of users who are followed by the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#following)
-- [Getting the list of highlighted tweets of the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#highlights)
-- [Getting the list of tweets liked by the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#likes)
-- [Getting the lists of the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#lists)
-- [Getting the media timeline of the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#media)
-- [Streaming notifications of the logged-in user in pseudo-realtime](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#notifications)
-- [Getting the recommended feed of the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#recommended)
-- [Getting the replies timeline of the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#replies)
-- [Searching for a username](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#search)
-- [Getting the tweet timeline of the given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#timeline)
-- [Unfollowing a given user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#unfollow)
-- [Updating the profile of the logged-in user](https://rishikant181.github.io/Rettiwt-API/classes/UserService.html#updateProfile)
-
 ## CLI Usage
 
 Rettiwt-API provides an easy to use command-line interface which does not require any programming knowledge.
@@ -557,10 +518,11 @@ Help for the CLI can be obtained from the CLI itself:
 
 The complete API reference can be found at [this](https://rishikant181.github.io/Rettiwt-API/modules) page.
 
-## Additional information
+## License
 
-- This API uses the cookies of a Twitter account to fetch data from Twitter and as such, there is always a chance (although a measly one) of getting the account banned by Twitter algorithm.
+ISC
 
-## Donation
+## Credits
 
-Support this project by donating at my [PayPal](https://paypal.me/Rishikant181?country.x=IN&locale.x=en_GB).
+- Original [Rettiwt-API](https://github.com/Rishikant181/Rettiwt-API) by [Rishikant Sahu](https://github.com/Rishikant181)
+- Browser extension support by [YouMind Open Lab](https://github.com/youmind-openlab)

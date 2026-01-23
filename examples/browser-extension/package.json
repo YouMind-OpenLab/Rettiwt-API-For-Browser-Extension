@@ -1,0 +1,24 @@
+{
+  "name": "rettiwt-browser-extension-demo",
+  "version": "1.0.0",
+  "description": "Demo browser extension to test Rettiwt API",
+  "private": true,
+  "scripts": {
+    "build": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "clean": "rm -rf dist/*.js dist/*.js.map"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "buffer": "^6.0.3",
+    "process": "^0.11.10",
+    "querystring-es3": "^0.2.1",
+    "stream-browserify": "^3.0.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.7.2",
+    "url": "^0.11.4",
+    "util": "^0.12.5",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
+  }
+}

@@ -78,7 +78,7 @@ export class NewTweetMedia implements INewTweetMedia {
  */
 export class UploadArgs implements IUploadArgs {
 	public id?: string;
-	public media?: string | ArrayBuffer;
+	public media?: string | ArrayBuffer | Blob;
 	public size?: number;
 
 	/**

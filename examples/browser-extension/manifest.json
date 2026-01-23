@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Rettiwt API Browser Extension Demo",
+  "version": "1.0.0",
+  "description": "Demo extension to test Rettiwt API in browser environment",
+  "permissions": [
+    "cookies"
+  ],
+  "host_permissions": [
+    "https://*.x.com/*",
+    "https://*.twitter.com/*",
+    "https://api.twitter.com/*",
+    "https://api.x.com/*",
+    "https://upload.twitter.com/*",
+    "https://upload.x.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Rettiwt API Demo",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

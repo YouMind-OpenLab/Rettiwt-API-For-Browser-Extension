@@ -864,11 +864,22 @@ export class TweetService extends FetcherService {
 	 *
 	 * - The uploaded media exists for 24 hrs within which it can be included in a tweet to be posted.
 	 * If not posted in a tweet within this period, the uploaded media is removed.
-	 * - Instead of a path to the media, an ArrayBuffer containing the media can also be uploaded.
+	 * - Instead of a path to the media, an ArrayBuffer or Blob containing the media can also be uploaded.
 	 */
-	public async upload(media: string | ArrayBuffer): Promise<string> {
+	public async upload(media: string | ArrayBuffer | Blob): Promise<string> {
 		// INITIALIZE
-		const size = typeof media == 'string' ? statSync(media).size : media.byteLength;
+		// Get size based on media type:
+		// - string: file path (use statSync)
+		// - Blob/File: use size property
+		// - ArrayBuffer: use byteLength
+		let size: number;
+		if (typeof media === 'string') {
+			size = statSync(media).size;
+		} else if (media instanceof Blob) {
+			size = media.size;
+		} else {
+			size = media.byteLength;
+		}
 		const id: string = (
 			await this.request<IMediaInitializeUploadResponse>(ResourceType.MEDIA_UPLOAD_INITIALIZE, {
 				upload: { size: size },

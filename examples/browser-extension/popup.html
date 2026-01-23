@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rettiwt API Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 420px;
+      height: 600px;
+      overflow: hidden;
+      background: #15202b;
+      color: #fff;
+    }
+
+    .container {
+      padding: 16px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #1da1f2;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .status.loading {
+      background: #1d3a5c;
+      color: #8ecdf7;
+    }
+
+    .status.success {
+      background: #1a4d2e;
+      color: #4ade80;
+    }
+
+    .status.error {
+      background: #4d1a1a;
+      color: #f87171;
+    }
+
+    .profile-card {
+      background: #192734;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .profile-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .profile-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #1da1f2;
+    }
+
+    .profile-info h2 {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .profile-info .username {
+      font-size: 12px;
+      color: #8899a6;
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .profile-stats span {
+      color: #8899a6;
+    }
+
+    .profile-stats strong {
+      color: #fff;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #192734;
+      color: #8899a6;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: #1da1f2;
+      color: #fff;
+    }
+
+    .tab:hover:not(.active) {
+      background: #22303c;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #38444d;
+      border-radius: 20px;
+      font-size: 13px;
+      background: #192734;
+      color: #fff;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #1da1f2;
+    }
+
+    .search-input::placeholder {
+      color: #8899a6;
+    }
+
+    .search-btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #1da1f2;
+      color: #fff;
+    }
+
+    .search-btn:hover {
+      background: #1a91da;
+    }
+
+    .search-btn:disabled {
+      background: #38444d;
+      cursor: not-allowed;
+    }
+
+    .content-section {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      color: #1da1f2;
+    }
+
+    .item-count {
+      font-size: 12px;
+      color: #8899a6;
+    }
+
+    .content-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .content-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content-list::-webkit-scrollbar-track {
+      background: #192734;
+      border-radius: 3px;
+    }
+
+    .content-list::-webkit-scrollbar-thumb {
+      background: #38444d;
+      border-radius: 3px;
+    }
+
+    .content-list::-webkit-scrollbar-thumb:hover {
+      background: #4a5568;
+    }
+
+    .tweet-card {
+      background: #192734;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .tweet-header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .tweet-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1da1f2;
+    }
+
+    .tweet-author {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .tweet-handle {
+      font-size: 12px;
+      color: #8899a6;
+    }
+
+    .tweet-text {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #e7e9ea;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+
+    .tweet-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: #8899a6;
+    }
+
+    #main-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #8ecdf7;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .load-more {
+      text-align: center;
+      padding: 12px;
+      color: #8899a6;
+      font-size: 12px;
+    }
+
+    .load-more.loading {
+      color: #1da1f2;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px;
+      color: #8899a6;
+      font-size: 13px;
+    }
+
+    .btn {
+      background: #1da1f2;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    .btn:hover {
+      background: #1a91da;
+    }
+
+    .btn:disabled {
+      background: #38444d;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#1da1f2">
+        <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"/>
+      </svg>
+      YouMind Rettiwt Demo
+    </h1>
+
+    <div id="status" class="status loading">
+      <span class="loading-spinner"></span>
+      Checking login status...
+    </div>
+
+    <div id="login-prompt" class="hidden">
+      <p style="margin-bottom: 12px; color: #8899a6;">
+        Please log in to X.com first, then click the button below.
+      </p>
+      <button id="retry-btn" class="btn">Check Again</button>
+    </div>
+
+    <div id="main-content" class="hidden">
+      <div id="profile-section" class="profile-card">
+        <div class="profile-header">
+          <img id="profile-avatar" class="profile-avatar" src="" alt="Avatar">
+          <div class="profile-info">
+            <h2 id="profile-name">Loading...</h2>
+            <div id="profile-username" class="username">@...</div>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div><strong id="followers-count">0</strong> <span>Followers</span></div>
+          <div><strong id="following-count">0</strong> <span>Following</span></div>
+          <div><strong id="tweets-count">0</strong> <span>Tweets</span></div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button id="tab-bookmarks" class="tab active">Bookmarks</button>
+        <button id="tab-search" class="tab">Search</button>
+      </div>
+
+      <!-- Search Section -->
+      <div id="search-section" class="hidden">
+        <div class="search-box">
+          <input type="text" id="search-input" class="search-input" placeholder="Search tweets...">
+          <button id="search-btn" class="search-btn">Search</button>
+        </div>
+      </div>
+
+      <!-- Content Section -->
+      <div class="content-section">
+        <div class="section-header">
+          <span id="section-title" class="section-title">Bookmarks</span>
+          <span id="item-count" class="item-count"></span>
+        </div>
+        <div id="content-list" class="content-list">
+          <div class="empty-state">Click a tab to load content</div>
+        </div>
+        <div id="load-more" class="load-more hidden">
+          <span class="loading-spinner"></span>
+          Loading more...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/popup.js"></script>
+</body>
+</html>

@@ -143,3 +143,4 @@ docs
 
 # Debugging
 src/debug.ts
+.DS_Store

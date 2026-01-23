@@ -1,6 +1,4 @@
 import axios, { AxiosError, isAxiosError } from 'axios';
-import { Cookie } from 'cookiejar';
-import { JSDOM } from 'jsdom';
 import { ClientTransaction } from 'x-client-transaction-id';
 
 import { AllowGuestAuthenticationGroup, FetchResourcesGroup, PostResourcesGroup } from '../../collections/Groups';
@@ -10,27 +8,30 @@ import { LogActions } from '../../enums/Logging';
 import { ResourceType } from '../../enums/Resource';
 import { FetchArgs } from '../../models/args/FetchArgs';
 import { PostArgs } from '../../models/args/PostArgs';
-import { AuthCredential } from '../../models/auth/AuthCredential';
 import { TwitterError } from '../../models/errors/TwitterError';
-import { RettiwtConfig } from '../../models/RettiwtConfig';
 import { IFetchArgs } from '../../types/args/FetchArgs';
 import { IPostArgs } from '../../types/args/PostArgs';
+import { IAuthCookie } from '../../types/auth/AuthCookie';
 import { ITransactionHeader } from '../../types/auth/TransactionHeader';
 import { IErrorHandler } from '../../types/ErrorHandler';
 import { IErrorData } from '../../types/raw/base/Error';
 
-import { AuthService } from '../internal/AuthService';
-import { ErrorService } from '../internal/ErrorService';
-import { LogService } from '../internal/LogService';
+import { ErrorService } from '../../services/internal/ErrorService';
+import { LogService } from '../../services/internal/LogService';
+
+import { DomAdapter } from '../adapters/DomAdapter';
+import { BrowserRettiwtConfig } from '../config/BrowserRettiwtConfig';
+import { BrowserAuthCredential, BrowserAuthService } from './BrowserAuthService';
 
 /**
- * The base service that handles all HTTP requests.
+ * Browser-compatible fetcher service.
+ * Uses native DOMParser instead of JSDOM, and browser cookies instead of base64 encoded API key.
  *
  * @public
  */
-export class FetcherService {
+export class BrowserFetcherService {
 	/** The AuthService instance to use. */
-	protected readonly _auth: AuthService;
+	protected readonly _auth: BrowserAuthService;
 
 	/** The delay/delay function to use (ms). */
 	private readonly _delay?: number | (() => number | Promise<number>);
@@ -42,18 +43,30 @@ export class FetcherService {
 	private readonly _timeout: number;
 
 	/** The config object. */
-	protected readonly config: RettiwtConfig;
+	protected readonly config: BrowserRettiwtConfig;
+
+	/** The authentication cookies. */
+	private _cookies?: IAuthCookie;
 
 	/**
-	 * @param config - The config object for configuring the Rettiwt instance.
+	 * @param config - The browser config object for configuring the Rettiwt instance.
 	 */
-	public constructor(config: RettiwtConfig) {
+	public constructor(config: BrowserRettiwtConfig) {
 		LogService.enabled = config.logging ?? false;
 		this.config = config;
 		this._delay = config.delay;
 		this._errorHandler = config.errorHandler ?? new ErrorService();
 		this._timeout = config.timeout ?? 0;
-		this._auth = new AuthService(config);
+		this._auth = new BrowserAuthService(config);
+	}
+
+	/**
+	 * Sets the authentication cookies for this service.
+	 *
+	 * @param cookies - The authentication cookies
+	 */
+	public setCookies(cookies: IAuthCookie): void {
+		this._cookies = cookies;
 	}
 
 	/**
@@ -74,20 +87,16 @@ export class FetcherService {
 	}
 
 	/**
-	 * Returns the AuthCredentials based on the type of key present.
+	 * Returns the AuthCredentials based on cookies or guest authentication.
 	 *
 	 * @returns The generated AuthCredential
 	 */
-	protected async _getCredential(): Promise<AuthCredential> {
-		if (this.config.apiKey) {
+	protected async _getCredential(): Promise<BrowserAuthCredential> {
+		if (this._cookies && this._cookies.auth_token) {
 			// Logging
 			LogService.log(LogActions.GET, { target: 'USER_CREDENTIAL' });
 
-			return new AuthCredential(
-				AuthService.decodeCookie(this.config.apiKey)
-					.split(';')
-					.map((item) => new Cookie(item)),
-			);
+			return new BrowserAuthCredential(this._cookies);
 		} else {
 			// Logging
 			LogService.log(LogActions.GET, { target: 'NEW_GUEST_CREDENTIAL' });
@@ -98,6 +107,7 @@ export class FetcherService {
 
 	/**
 	 * Generates the header for the transaction ID.
+	 * Uses native DOMParser instead of JSDOM.
 	 *
 	 * @param method - The target method.
 	 * @param url - The target URL.
@@ -105,7 +115,7 @@ export class FetcherService {
 	 * @returns The header containing the transaction ID.
 	 */
 	protected async _getTransactionHeader(method: string, url: string): Promise<ITransactionHeader> {
-		// Get the X homepage HTML document (using utility function)
+		// Get the X homepage HTML document (using browser-native DOM)
 		const document = await this._handleXMigration();
 
 		// Create and initialize ClientTransaction instance
@@ -124,17 +134,19 @@ export class FetcherService {
 		};
 	}
 
+	/**
+	 * Handles X.com migration using native DOMParser instead of JSDOM.
+	 *
+	 * @returns The parsed Document
+	 */
 	protected async _handleXMigration(): Promise<Document> {
 		// Fetch X.com homepage
 		const homePageResponse = await axios.get<string>('https://x.com', {
 			headers: this.config.headers,
-			httpAgent: this.config.httpsAgent,
-			httpsAgent: this.config.httpsAgent,
 		});
 
-		// Parse HTML using linkedom
-		let dom = new JSDOM(homePageResponse.data);
-		let document = dom.window.document;
+		// Parse HTML using native DOMParser
+		let document = DomAdapter.parseHTML(homePageResponse.data);
 
 		// Check for migration redirection links
 		const migrationRedirectionRegex = new RegExp(
@@ -150,13 +162,9 @@ export class FetcherService {
 
 		if (migrationRedirectionUrl) {
 			// Follow redirection URL
-			const redirectResponse = await axios.get<string>(migrationRedirectionUrl[0], {
-				httpAgent: this.config.httpsAgent,
-				httpsAgent: this.config.httpsAgent,
-			});
+			const redirectResponse = await axios.get<string>(migrationRedirectionUrl[0]);
 
-			dom = new JSDOM(redirectResponse.data);
-			document = dom.window.document;
+			document = DomAdapter.parseHTML(redirectResponse.data);
 		}
 
 		// Handle migration form if present
@@ -193,12 +201,9 @@ export class FetcherService {
 
 					/* eslint-enable @typescript-eslint/naming-convention */
 				},
-				httpAgent: this.config.httpsAgent,
-				httpsAgent: this.config.httpsAgent,
 			});
 
-			dom = new JSDOM(formResponse.data);
-			document = dom.window.document;
+			document = DomAdapter.parseHTML(formResponse.data);
 		}
 
 		// Return final DOM document
@@ -259,25 +264,6 @@ export class FetcherService {
 	 * @typeParam T - The type of the returned response data.
 	 *
 	 * @returns The raw data response received.
-	 *
-	 * @example
-	 *
-	 * #### Fetching the raw details of a single user, using their username
-	 * ```ts
-	 * import { FetcherService, ResourceType } from 'rettiwt-api';
-	 *
-	 * // Creating a new FetcherService instance using the given 'API_KEY'
-	 * const fetcher = new FetcherService({ apiKey: API_KEY });
-	 *
-	 * // Fetching the details of the User with username 'user1'
-	 * fetcher.request(ResourceType.USER_DETAILS_BY_USERNAME, { id: 'user1' })
-	 * .then(res => {
-	 * 	console.log(res);
-	 * })
-	 * .catch(err => {
-	 * 	console.log(err);
-	 * });
-	 * ```
 	 */
 	public async request<T = unknown>(resource: ResourceType, args: IFetchArgs | IPostArgs): Promise<T> {
 		/** The current retry number. */
@@ -295,8 +281,8 @@ export class FetcherService {
 		// Validating args
 		args = this._validateArgs(resource, args)!;
 
-		// Getting credentials from key
-		const cred: AuthCredential = await this._getCredential();
+		// Getting credentials from cookies
+		const cred: BrowserAuthCredential = await this._getCredential();
 
 		// Getting request configuration
 		const config = Requests[resource](args);
@@ -307,8 +293,7 @@ export class FetcherService {
 			...cred.toHeader(),
 			...this.config.headers,
 		};
-		config.httpAgent = this.config.httpsAgent;
-		config.httpsAgent = this.config.httpsAgent;
+		// Browser doesn't use httpsAgent
 		config.timeout = this._timeout;
 
 		// Using retries for error 404

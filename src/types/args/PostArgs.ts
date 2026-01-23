@@ -130,8 +130,11 @@ export interface IUploadArgs {
 	/** The id allocated to the media file to be uploaded. */
 	id?: string;
 
-	/** The media file to be uploaded. */
-	media?: string | ArrayBuffer;
+	/**
+	 * The media file to be uploaded.
+	 * Can be a file path (Node.js), ArrayBuffer, or Blob (browser).
+	 */
+	media?: string | ArrayBuffer | Blob;
 
 	/**
 	 * The size (in bytes) of the media file to be uploaded.

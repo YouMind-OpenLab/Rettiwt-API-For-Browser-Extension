@@ -1,0 +1,28 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./dist/browser",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"types": ["chrome"],
+		"moduleResolution": "bundler",
+		"module": "ES2022",
+		"declaration": true,
+		"declarationDir": "./dist/browser"
+	},
+	"include": [
+		"src/browser/**/*",
+		"src/models/**/*",
+		"src/types/**/*",
+		"src/enums/**/*",
+		"src/collections/**/*",
+		"src/helper/JsonUtils.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"**/*.spec.ts",
+		"playground/*",
+		"src/cli.ts",
+		"src/commands/**/*",
+		"src/helper/CliUtils.ts"
+	]
+}

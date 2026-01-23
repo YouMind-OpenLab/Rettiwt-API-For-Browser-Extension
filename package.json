@@ -1,14 +1,26 @@
 {
-	"name": "rettiwt-api",
+	"name": "@youmind-openlab/rettiwt-api",
 	"version": "6.3.0-alpha.0",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
-	"description": "An API for fetching data from TwitterAPI, without any rate limits!",
+	"description": "YouMind Open Lab fork - An API for fetching data from TwitterAPI, with browser extension support!",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./browser": {
+			"types": "./dist/browser/index.d.ts",
+			"default": "./dist/browser/index.js"
+		}
+	},
 	"bin": {
 		"rettiwt": "dist/cli.js"
 	},
 	"scripts": {
 		"build": "tsc",
+		"build:browser": "tsc -p tsconfig.browser.json",
+		"build:all": "npm run build && npm run build:browser",
 		"prepare": "tsc",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
@@ -33,6 +45,7 @@
 		"node": "^22.21.0"
 	},
 	"devDependencies": {
+		"@types/chrome": "^0.0.300",
 		"@types/cookiejar": "^2.1.5",
 		"@types/jsdom": "^27.0.0",
 		"@types/node": "^22.13.1",

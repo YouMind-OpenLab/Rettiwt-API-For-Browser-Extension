@@ -11,11 +11,21 @@ import FormData from 'form-data';
 export class MediaRequests {
 	/**
 	 * @param id - The allocated id of the media item to be uploaded.
-	 * @param media - The media item to upload.
+	 * @param media - The media item to upload. Can be a file path (Node.js), ArrayBuffer, or Blob (browser).
 	 */
-	public static appendUpload(id: string, media: string | ArrayBuffer): AxiosRequestConfig {
+	public static appendUpload(id: string, media: string | ArrayBuffer | Blob): AxiosRequestConfig {
 		const data = new FormData();
-		data.append('media', typeof media == 'string' ? fs.createReadStream(media) : Buffer.from(media));
+		// Support different media types:
+		// - string: file path (Node.js only, uses fs.createReadStream)
+		// - Blob/File: browser native blob (pass directly)
+		// - ArrayBuffer: convert to Buffer (Node.js) or pass as-is (browser)
+		if (typeof media === 'string') {
+			data.append('media', fs.createReadStream(media));
+		} else if (media instanceof Blob) {
+			data.append('media', media);
+		} else {
+			data.append('media', Buffer.from(media));
+		}
 		return {
 			method: 'post',
 			headers: { referer: 'https://x.com' },
