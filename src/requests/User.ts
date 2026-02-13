@@ -245,6 +245,7 @@ export class UserRequests {
 	public static bookmarks(count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
+			// TODO: Bookmarks listing removed from Twitter bundle 2026-02-13
 			url: 'https://x.com/i/api/graphql/-LGfdImKeQz0xS_jjUwzlA/Bookmarks',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
@@ -331,7 +332,7 @@ export class UserRequests {
 	public static detailsById(id: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/Bbaot8ySMtJD7K2t01gW7A/UserByRestId',
+			url: 'https://x.com/i/api/graphql/pBP53RhZiQHExruxf-I8ig/UserByRestId',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({ userId: id, withSafetyModeUserFields: true }),
@@ -360,7 +361,7 @@ export class UserRequests {
 	public static detailsByUsername(userName: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/-oaLodhGbbnzJBACb1kk2Q/UserByScreenName',
+			url: 'https://x.com/i/api/graphql/AWbeRIdkLtqTRN7yL_H8yw/UserByScreenName',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({ screen_name: userName, withGrokTranslatedBio: false }),
@@ -408,7 +409,7 @@ export class UserRequests {
 	public static followed(count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/_qO7FJzShSKYWi9gtboE6A/HomeLatestTimeline',
+			url: 'https://x.com/i/api/graphql/7LL9B2gjCKU7swZw3aKF7g/HomeLatestTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -468,7 +469,7 @@ export class UserRequests {
 	public static followers(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/kuFUYP9eV1FPoEy4N-pi7w/Followers',
+			url: 'https://x.com/i/api/graphql/efNzdTpE-mkUcLARCd3RPQ/Followers',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -528,7 +529,7 @@ export class UserRequests {
 	public static following(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/C1qZ6bs-L3oc_TKSZyxkXQ/Following',
+			url: 'https://x.com/i/api/graphql/M3LO-sJg6BCWdEliN_C2fQ/Following',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -584,7 +585,7 @@ export class UserRequests {
 	public static highlights(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/kzKWdUA6Y1LCqlvaVILZwQ/UserHighlightsTweets',
+			url: 'https://x.com/i/api/graphql/dZc2IL7haTg9IbZ-vDV3xw/UserHighlightsTweets',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -645,7 +646,7 @@ export class UserRequests {
 	public static likes(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/JR2gceKucIKcVNB_9JkhsA/Likes',
+			url: 'https://x.com/i/api/graphql/JPxbOQGc_tXQ0Y29mvHKSw/Likes',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -709,7 +710,7 @@ export class UserRequests {
 	public static lists(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/9mQl9vR31wjodBP9b7_wyQ/ListsManagementPageTimeline',
+			url: 'https://x.com/i/api/graphql/FHavhcMS-6NrywtPkWiOHg/ListsManagementPageTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({ count: 100, cursor: cursor }),
@@ -764,7 +765,7 @@ export class UserRequests {
 	public static media(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/MMnr49cP_nldzCTfeVDRtA/UserMedia',
+			url: 'https://x.com/i/api/graphql/SJpoWbz8n_i3vN3sOPfXvw/UserMedia',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -883,7 +884,7 @@ export class UserRequests {
 	public static recommended(count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/V7xdnRnvW6a8vIsMr9xK7A/HomeTimeline',
+			url: 'https://x.com/i/api/graphql/y_gEr8-rsIu-XEOVAkh00A/HomeTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -955,7 +956,7 @@ export class UserRequests {
 	public static search(userName: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/M1jEez78PEfVfbQLvlWMvQ/SearchTimeline',
+			url: 'https://x.com/i/api/graphql/cGK-Qeg1XJc2sZ6kgQw_Iw/SearchTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -1016,7 +1017,7 @@ export class UserRequests {
 	public static subscriptions(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/fl06vhYypYRcRxgLKO011Q/UserCreatorSubscriptions',
+			url: 'https://x.com/i/api/graphql/5nn_EKhv4toQ_rhMjjwGoA/UserCreatorSubscriptions',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -1075,7 +1076,7 @@ export class UserRequests {
 	public static tweets(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/-V26I6Pb5xDZ3C7BWwCQ_Q/UserTweets',
+			url: 'https://x.com/i/api/graphql/eApPT8jppbYXlweF_ByTyA/UserTweets',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -1138,7 +1139,7 @@ export class UserRequests {
 	public static tweetsAndReplies(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/61HQnvcGP870hiE-hCbG4A/UserTweetsAndReplies',
+			url: 'https://x.com/i/api/graphql/aDl2OEiH_EFH10mA_ewZ9A/UserTweetsAndReplies',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({

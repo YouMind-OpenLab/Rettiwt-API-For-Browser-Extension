@@ -34,7 +34,7 @@ export class TweetRequests {
 	public static bulkDetails(ids: string[]): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/-R17e8UqwApFGdMxa3jASA/TweetResultsByRestIds',
+			url: 'https://x.com/i/api/graphql/vojBqBFpEyYMQ-LfRIKU4Q/TweetResultsByRestIds',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -99,7 +99,7 @@ export class TweetRequests {
 	public static details(id: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/aFvUsJm2c-oDkJV75blV6g/TweetResultByRestId',
+			url: 'https://x.com/i/api/graphql/d6YKjvQ920F-D4Y1PruO-A/TweetResultByRestId',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -237,7 +237,7 @@ export class TweetRequests {
 
 		return {
 			method: 'post',
-			url: 'https://x.com/i/api/graphql/Uf3io9zVp1DsYxrmL5FJ7g/CreateTweet',
+			url: 'https://x.com/i/api/graphql/Ah3G_byjEDs_HSlgU0PyZw/CreateTweet',
 			data: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: {
@@ -294,7 +294,7 @@ export class TweetRequests {
 	public static replies(id: string, cursor?: string, sortBy?: RawTweetRepliesSortType): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/97JF30KziU00483E_8elBA/TweetDetail',
+			url: 'https://x.com/i/api/graphql/ooUbmy0T2DmvwfjgARktiQ/TweetDetail',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -474,7 +474,7 @@ export class TweetRequests {
 
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/M1jEez78PEfVfbQLvlWMvQ/SearchTimeline',
+			url: 'https://x.com/i/api/graphql/cGK-Qeg1XJc2sZ6kgQw_Iw/SearchTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -584,7 +584,7 @@ export class TweetRequests {
 	public static unretweet(id: string): AxiosRequestConfig {
 		return {
 			method: 'post',
-			url: 'https://x.com/i/api/graphql/iQtK4dl5hBmXewYZuEOKVw/DeleteRetweet',
+			url: 'https://x.com/i/api/graphql/G4MoqBiE6aqyo4QWAgCy4w/DeleteRetweet',
 			data: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: {
