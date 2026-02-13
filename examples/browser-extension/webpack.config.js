@@ -4,6 +4,7 @@ const webpack = require('webpack');
 module.exports = {
   entry: {
     popup: './src/popup.ts',
+    background: './src/background.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

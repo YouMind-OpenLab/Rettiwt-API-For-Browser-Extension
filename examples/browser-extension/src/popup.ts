@@ -1,4 +1,40 @@
-import { RettiwtBrowser, User, Tweet } from 'rettiwt-api/browser';
+/**
+ * Popup script for Rettiwt Browser Extension Demo
+ * Communicates with background service worker via chrome.runtime messages
+ */
+
+import type { MessageType, ResponseType } from './background';
+
+// Types for serialized data from background
+interface SerializedUser {
+	id: string;
+	userName: string;
+	fullName: string;
+	profileImage: string;
+	followersCount: number;
+	followingsCount: number;
+	statusesCount?: number;
+}
+
+interface SerializedTweet {
+	id: string;
+	fullText: string;
+	createdAt: string;
+	likeCount: number;
+	retweetCount: number;
+	replyCount: number;
+	tweetBy: {
+		id: string;
+		userName: string;
+		fullName: string;
+		profileImage: string;
+	} | null;
+}
+
+interface CursoredResponse<T> {
+	list: T[];
+	next: string;
+}
 
 // DOM Elements
 const statusEl = document.getElementById('status') as HTMLDivElement;
@@ -28,16 +64,35 @@ const contentListEl = document.getElementById('content-list') as HTMLDivElement;
 const loadMoreEl = document.getElementById('load-more') as HTMLDivElement;
 
 // Global state
-let rettiwt: RettiwtBrowser | null = null;
+let currentUser: SerializedUser | null = null;
 let currentTab: 'bookmarks' | 'search' = 'bookmarks';
-let bookmarks: Tweet[] = [];
-let searchResults: Tweet[] = [];
+let bookmarks: SerializedTweet[] = [];
+let searchResults: SerializedTweet[] = [];
 let bookmarksCursor: string | undefined;
 let searchCursor: string | undefined;
 let isLoading = false;
 let hasMoreBookmarks = true;
 let hasMoreSearch = true;
 let currentSearchQuery = '';
+
+/**
+ * Send message to background service worker
+ */
+async function sendMessage<T>(message: MessageType): Promise<T> {
+	return new Promise((resolve, reject) => {
+		chrome.runtime.sendMessage(message, (response: ResponseType) => {
+			if (chrome.runtime.lastError) {
+				reject(new Error(chrome.runtime.lastError.message));
+				return;
+			}
+			if (response.success) {
+				resolve(response.data as T);
+			} else {
+				reject(new Error(response.error));
+			}
+		});
+	});
+}
 
 /**
  * Update status display
@@ -67,7 +122,7 @@ function formatNumber(num: number): string {
 /**
  * Display user profile
  */
-function displayProfile(user: User) {
+function displayProfile(user: SerializedUser) {
 	profileAvatarEl.src = user.profileImage || '';
 	profileNameEl.textContent = user.fullName || 'Unknown';
 	profileUsernameEl.textContent = `@${user.userName || 'unknown'}`;
@@ -88,7 +143,7 @@ function escapeHtml(text: string): string {
 /**
  * Render a single tweet card
  */
-function renderTweetCard(tweet: Tweet): string {
+function renderTweetCard(tweet: SerializedTweet): string {
 	const author = tweet.tweetBy;
 	const avatarUrl = author?.profileImage || '';
 	const authorName = author?.fullName || 'Unknown';
@@ -135,34 +190,37 @@ function updateContentList() {
 	itemCountEl.textContent = items.length > 0 ? `${items.length} items` : '';
 
 	// Only hide load-more when there's definitely no more content
-	// The loading indicator is managed by the load functions
 	if (!hasMore && !isLoading) {
 		loadMoreEl.classList.add('hidden');
 	}
 }
 
 /**
- * Load more bookmarks
+ * Load more bookmarks via background script
  */
 async function loadMoreBookmarks() {
-	if (!rettiwt || isLoading || !hasMoreBookmarks) return;
+	if (isLoading || !hasMoreBookmarks) return;
 
 	isLoading = true;
 	loadMoreEl.classList.remove('hidden');
 
 	try {
-		const result = await rettiwt.user.bookmarks(20, bookmarksCursor);
+		const result = await sendMessage<CursoredResponse<SerializedTweet>>({
+			type: 'GET_BOOKMARKS',
+			count: 20,
+			cursor: bookmarksCursor,
+		});
 
 		if (!result.list || result.list.length === 0) {
 			hasMoreBookmarks = false;
 		} else {
 			bookmarks.push(...result.list);
-			bookmarksCursor = result.next;
+			bookmarksCursor = result.next || undefined;
 			hasMoreBookmarks = !!bookmarksCursor;
 		}
 	} catch (error) {
 		console.error('Error loading bookmarks:', error);
-		hasMoreBookmarks = false; // Stop trying on error
+		hasMoreBookmarks = false;
 	} finally {
 		isLoading = false;
 		loadMoreEl.classList.add('hidden');
@@ -171,37 +229,37 @@ async function loadMoreBookmarks() {
 }
 
 /**
- * Load more search results
+ * Load more search results via background script
  */
 async function loadMoreSearchResults() {
-	if (!rettiwt || isLoading || !hasMoreSearch || !currentSearchQuery) return;
+	if (isLoading || !hasMoreSearch || !currentSearchQuery) return;
 
 	isLoading = true;
 	loadMoreEl.classList.remove('hidden');
 
 	try {
 		console.log('Searching for:', currentSearchQuery, 'cursor:', searchCursor);
-		const result = await rettiwt.tweet.search(
-			{ includeWords: [currentSearchQuery] },
-			20,
-			searchCursor,
-		);
+		const result = await sendMessage<CursoredResponse<SerializedTweet>>({
+			type: 'SEARCH_TWEETS',
+			query: currentSearchQuery,
+			count: 20,
+			cursor: searchCursor,
+		});
 		console.log('Search result:', result);
 
 		if (!result.list || result.list.length === 0) {
 			hasMoreSearch = false;
 		} else {
 			searchResults.push(...result.list);
-			searchCursor = result.next;
+			searchCursor = result.next || undefined;
 			hasMoreSearch = !!searchCursor;
 		}
 	} catch (error) {
 		console.error('Error loading search results:', error);
-		// Show error to user
 		if (searchResults.length === 0) {
 			contentListEl.innerHTML = `<div class="empty-state">Search failed: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
 		}
-		hasMoreSearch = false; // Stop trying on error
+		hasMoreSearch = false;
 	} finally {
 		isLoading = false;
 		loadMoreEl.classList.add('hidden');
@@ -213,8 +271,6 @@ async function loadMoreSearchResults() {
  * Perform search
  */
 async function performSearch() {
-	if (!rettiwt) return;
-
 	const query = searchInputEl.value.trim();
 	if (!query) return;
 
@@ -270,7 +326,14 @@ function handleScroll() {
 
 	// Load more when scrolled near bottom (within 150px)
 	if (scrollTop + clientHeight >= scrollHeight - 150) {
-		console.log('Near bottom detected', { scrollTop, scrollHeight, clientHeight, isLoading, hasMoreBookmarks, hasMoreSearch });
+		console.log('Near bottom detected', {
+			scrollTop,
+			scrollHeight,
+			clientHeight,
+			isLoading,
+			hasMoreBookmarks,
+			hasMoreSearch,
+		});
 		if (currentTab === 'bookmarks' && !isLoading && hasMoreBookmarks) {
 			loadMoreBookmarks();
 		} else if (currentTab === 'search' && currentSearchQuery && !isLoading && hasMoreSearch) {
@@ -288,12 +351,10 @@ async function initialize() {
 	mainContentEl.classList.add('hidden');
 
 	try {
-		rettiwt = new RettiwtBrowser();
+		// Check if logged in via background script
+		const loginResult = await sendMessage<{ isLoggedIn: boolean }>({ type: 'CHECK_LOGIN' });
 
-		// Check if logged in (just checks cookies, no API call)
-		const isLoggedIn = await rettiwt.isLoggedIn();
-
-		if (!isLoggedIn) {
+		if (!loginResult.isLoggedIn) {
 			setStatus('Not logged in to X.com', 'error');
 			loginPromptEl.classList.remove('hidden');
 			return;
@@ -301,12 +362,13 @@ async function initialize() {
 
 		setStatus('Verifying credentials...', 'loading');
 
-		// Initialize and verify (fetches user profile)
-		const user = await rettiwt.initialize();
+		// Initialize and verify via background script
+		const initResult = await sendMessage<{ user: SerializedUser }>({ type: 'INITIALIZE' });
+		currentUser = initResult.user;
 
 		setStatus('Successfully connected!', 'success');
 		mainContentEl.classList.remove('hidden');
-		displayProfile(user);
+		displayProfile(currentUser);
 
 		// Auto-load bookmarks
 		await loadMoreBookmarks();
