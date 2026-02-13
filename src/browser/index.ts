@@ -42,6 +42,7 @@ export { BrowserUserService } from './services/BrowserUserService';
 export { BrowserTweetService, BrowserMedia } from './services/BrowserTweetService';
 export { BrowserListService } from './services/BrowserListService';
 export { BrowserDirectMessageService } from './services/BrowserDirectMessageService';
+export { GraphQLQueryIdResolver } from './services/GraphQLQueryIdResolver';
 
 // Re-export enums (importing directly to avoid Node.js dependencies)
 export { RawAnalyticsGranularity, RawAnalyticsMetric } from '../enums/raw/Analytics';
