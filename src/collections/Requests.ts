@@ -4,6 +4,7 @@ import { ResourceType } from '../enums/Resource';
 import { DMRequests } from '../requests/DirectMessage';
 import { ListRequests } from '../requests/List';
 import { MediaRequests } from '../requests/Media';
+import { SpaceRequests } from '../requests/Space';
 import { TweetRequests } from '../requests/Tweet';
 import { UserRequests } from '../requests/User';
 import { IFetchArgs } from '../types/args/FetchArgs';
@@ -33,6 +34,9 @@ export const Requests: { [key in keyof typeof ResourceType]: (args: IFetchArgs |
 	DM_INBOX_INITIAL_STATE: () => DMRequests.inboxInitial(),
 	DM_INBOX_TIMELINE: (args: IFetchArgs) => DMRequests.inboxTimeline(args.maxId),
 	DM_DELETE_CONVERSATION: (args: IPostArgs) => DMRequests.deleteConversation(args.conversationId!),
+
+	SPACE_DETAILS: (args: IFetchArgs) =>
+		SpaceRequests.details(args.id!, args.withReplays, args.withListeners, args.isMetatagsQuery),
 
 	TWEET_BOOKMARK: (args: IPostArgs) => TweetRequests.bookmark(args.id!),
 	TWEET_DETAILS: (args: IFetchArgs) => TweetRequests.details(args.id!),
@@ -66,6 +70,7 @@ export const Requests: { [key in keyof typeof ResourceType]: (args: IFetchArgs |
 	USER_BOOKMARK_FOLDERS: (args: IFetchArgs) => UserRequests.bookmarkFolders(args.cursor),
 	USER_BOOKMARK_FOLDER_TWEETS: (args: IFetchArgs) =>
 		UserRequests.bookmarkFolderTweets(args.id!, args.count, args.cursor),
+	USER_ABOUT_BY_USERNAME: (args: IFetchArgs) => UserRequests.aboutByUsername(args.id!),
 	USER_DETAILS_BY_USERNAME: (args: IFetchArgs) => UserRequests.detailsByUsername(args.id!),
 	USER_DETAILS_BY_ID: (args: IFetchArgs) => UserRequests.detailsById(args.id!),
 	USER_DETAILS_BY_IDS_BULK: (args: IFetchArgs) => UserRequests.bulkDetailsByIds(args.ids!),
