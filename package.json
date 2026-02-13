@@ -1,6 +1,6 @@
 {
 	"name": "@youmind-openlab/rettiwt-api",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"description": "YouMind Open Lab fork - An API for fetching data from TwitterAPI, with browser extension support!",
@@ -42,7 +42,7 @@
 	},
 	"homepage": "https://rishikant181.github.io/Rettiwt-API/",
 	"engines": {
-		"node": "^22.21.0"
+		"node": "^22.14.0"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.0.300",
@@ -68,5 +68,6 @@
 		"jsdom": "^27.2.0",
 		"node-html-parser": "^7.0.1",
 		"x-client-transaction-id": "^0.1.9"
-	}
+	},
+	"packageManager": "pnpm@9.15.9"
 }
