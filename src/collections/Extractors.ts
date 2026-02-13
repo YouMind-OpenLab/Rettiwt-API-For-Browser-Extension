@@ -6,8 +6,10 @@ import { CursoredData } from '../models/data/CursoredData';
 import { Inbox } from '../models/data/Inbox';
 import { List } from '../models/data/List';
 import { Notification } from '../models/data/Notification';
+import { Space } from '../models/data/Space';
 import { Tweet } from '../models/data/Tweet';
 import { User } from '../models/data/User';
+import { UserAbout } from '../models/data/UserAbout';
 import { IConversationTimelineResponse } from '../types/raw/dm/Conversation';
 import { IInboxInitialResponse } from '../types/raw/dm/InboxInitial';
 import { IInboxTimelineResponse } from '../types/raw/dm/InboxTimeline';
@@ -17,6 +19,7 @@ import { IListMembersResponse } from '../types/raw/list/Members';
 import { IListMemberRemoveResponse } from '../types/raw/list/RemoveMember';
 import { IListTweetsResponse } from '../types/raw/list/Tweets';
 import { IMediaInitializeUploadResponse } from '../types/raw/media/InitalizeUpload';
+import { IAudioSpaceByIdResponse } from '../types/raw/space/AudioSpaceById';
 import { ITweetBookmarkResponse } from '../types/raw/tweet/Bookmark';
 import { ITweetDetailsResponse } from '../types/raw/tweet/Details';
 import { ITweetDetailsBulkResponse } from '../types/raw/tweet/DetailsBulk';
@@ -33,6 +36,7 @@ import { ITweetUnlikeResponse } from '../types/raw/tweet/Unlike';
 import { ITweetUnpostResponse } from '../types/raw/tweet/Unpost';
 import { ITweetUnretweetResponse } from '../types/raw/tweet/Unretweet';
 import { ITweetUnscheduleResponse } from '../types/raw/tweet/Unschedule';
+import { IUserAboutResponse } from '../types/raw/user/About';
 import { IUserAffiliatesResponse } from '../types/raw/user/Affiliates';
 import { IUserAnalyticsResponse } from '../types/raw/user/Analytics';
 import { IUserBookmarkFoldersResponse } from '../types/raw/user/BookmarkFolders';
@@ -85,6 +89,8 @@ export const Extractors = {
 	DM_INBOX_INITIAL_STATE: (response: IInboxInitialResponse): Inbox => new Inbox(response),
 	DM_INBOX_TIMELINE: (response: IInboxTimelineResponse): Inbox => new Inbox(response),
 
+	SPACE_DETAILS: (response: IAudioSpaceByIdResponse): Space | undefined => Space.single(response),
+
 	TWEET_BOOKMARK: (response: ITweetBookmarkResponse): boolean => response?.data?.tweet_bookmark_put === 'Done',
 	TWEET_DETAILS: (response: ITweetDetailsResponse, id: string): Tweet | undefined => Tweet.single(response, id),
 	TWEET_DETAILS_ALT: (response: ITweetRepliesResponse, id: string): Tweet | undefined => Tweet.single(response, id),
@@ -119,6 +125,7 @@ export const Extractors = {
 		new CursoredData<BookmarkFolder>(response, BaseType.BOOKMARK_FOLDER),
 	USER_BOOKMARK_FOLDER_TWEETS: (response: IUserBookmarkFolderTweetsResponse): CursoredData<Tweet> =>
 		new CursoredData<Tweet>(response, BaseType.TWEET),
+	USER_ABOUT_BY_USERNAME: (response: IUserAboutResponse): UserAbout | undefined => UserAbout.single(response),
 	USER_DETAILS_BY_USERNAME: (response: IUserDetailsResponse): User | undefined => User.single(response),
 	USER_DETAILS_BY_ID: (response: IUserDetailsResponse): User | undefined => User.single(response),
 	USER_DETAILS_BY_IDS_BULK: (response: IUserDetailsBulkResponse, ids: string[]): User[] =>

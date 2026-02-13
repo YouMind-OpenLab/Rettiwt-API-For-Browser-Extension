@@ -22,6 +22,7 @@ import { LogService } from '../../services/internal/LogService';
 import { DomAdapter } from '../adapters/DomAdapter';
 import { BrowserRettiwtConfig } from '../config/BrowserRettiwtConfig';
 import { BrowserAuthCredential, BrowserAuthService } from './BrowserAuthService';
+import { GraphQLQueryIdResolver } from './GraphQLQueryIdResolver';
 
 /**
  * Browser-compatible fetcher service.
@@ -30,6 +31,9 @@ import { BrowserAuthCredential, BrowserAuthService } from './BrowserAuthService'
  * @public
  */
 export class BrowserFetcherService {
+	/** Shared GraphQL query ID resolver (singleton across all instances). */
+	private static _queryIdResolver: GraphQLQueryIdResolver = new GraphQLQueryIdResolver();
+
 	/** The AuthService instance to use. */
 	protected readonly _auth: BrowserAuthService;
 
@@ -206,6 +210,9 @@ export class BrowserFetcherService {
 			document = DomAdapter.parseHTML(formResponse.data);
 		}
 
+		// Resolve GraphQL query IDs from the document
+		await BrowserFetcherService._queryIdResolver.resolve(document);
+
 		// Return final DOM document
 		return document;
 	}
@@ -287,6 +294,25 @@ export class BrowserFetcherService {
 		// Getting request configuration
 		const config = Requests[resource](args);
 
+		// Dynamically replace GraphQL query IDs if resolved
+		if (config.url?.includes('/i/api/graphql/')) {
+			const urlMatch = config.url.match(/\/i\/api\/graphql\/[^/]+\/([^?]+)/);
+			if (urlMatch) {
+				const operationName = urlMatch[1];
+				const resolvedId = BrowserFetcherService._queryIdResolver.getQueryId(operationName);
+				if (resolvedId) {
+					config.url = config.url.replace(
+						/\/i\/api\/graphql\/[^/]+\//,
+						`/i/api/graphql/${resolvedId}/`,
+					);
+					// Also replace queryId in request body if present
+					if (config.data && typeof config.data === 'object' && 'queryId' in config.data) {
+						(config.data as Record<string, unknown>).queryId = resolvedId;
+					}
+				}
+			}
+		}
+
 		// Setting additional request parameters
 		config.headers = {
 			...config.headers,
@@ -336,6 +362,10 @@ export class BrowserFetcherService {
 				// Returning the reponse body
 				return responseData;
 			} catch (err) {
+				// Invalidate query ID cache on 403 (possible ID rotation)
+				if (isAxiosError(err) && err.status === 403) {
+					BrowserFetcherService._queryIdResolver.invalidate();
+				}
 				// If it's an error 404, retry
 				if (isAxiosError(err) && err.status === 404) {
 					error = err;

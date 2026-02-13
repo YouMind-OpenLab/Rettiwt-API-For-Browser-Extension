@@ -67,7 +67,7 @@ export class ListRequests {
 	public static members(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/Bnhcen0kdsMAU1tW7U79qQ/ListMembers',
+			url: 'https://x.com/i/api/graphql/7FPk01hdc1jyzL6Gj8vMZw/ListMembers',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
@@ -153,7 +153,7 @@ export class ListRequests {
 	public static tweets(id: string, count?: number, cursor?: string): AxiosRequestConfig {
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/fqNUs_6rqLf89u_2waWuqg/ListLatestTweetsTimeline',
+			url: 'https://x.com/i/api/graphql/aJxgBm1YveGJCRiWJFx5WA/ListLatestTweetsTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
