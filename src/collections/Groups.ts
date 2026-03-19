@@ -71,6 +71,7 @@ export const PostResourcesGroup = [
 	ResourceType.TWEET_BOOKMARK,
 	ResourceType.TWEET_LIKE,
 	ResourceType.TWEET_POST,
+	ResourceType.TWEET_POST_NOTE,
 	ResourceType.TWEET_RETWEET,
 	ResourceType.TWEET_SCHEDULE,
 	ResourceType.TWEET_UNBOOKMARK,
@@ -81,4 +82,8 @@ export const PostResourcesGroup = [
 	ResourceType.USER_FOLLOW,
 	ResourceType.USER_UNFOLLOW,
 	ResourceType.USER_PROFILE_UPDATE,
+	ResourceType.USER_PROFILE_IMAGE_UPDATE,
+	ResourceType.USER_PROFILE_BANNER_UPDATE,
+	ResourceType.USER_USERNAME_CHANGE,
+	ResourceType.USER_PASSWORD_CHANGE,
 ];

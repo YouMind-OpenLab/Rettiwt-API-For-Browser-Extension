@@ -25,7 +25,7 @@ import { ITweetDetailsResponse } from '../types/raw/tweet/Details';
 import { ITweetDetailsBulkResponse } from '../types/raw/tweet/DetailsBulk';
 import { ITweetLikeResponse } from '../types/raw/tweet/Like';
 import { ITweetLikersResponse } from '../types/raw/tweet/Likers';
-import { ITweetPostResponse } from '../types/raw/tweet/Post';
+import { ITweetPostNoteResponse, ITweetPostResponse } from '../types/raw/tweet/Post';
 import { ITweetRepliesResponse } from '../types/raw/tweet/Replies';
 import { ITweetRetweetResponse } from '../types/raw/tweet/Retweet';
 import { ITweetRetweetersResponse } from '../types/raw/tweet/Retweeters';
@@ -42,6 +42,7 @@ import { IUserAnalyticsResponse } from '../types/raw/user/Analytics';
 import { IUserBookmarkFoldersResponse } from '../types/raw/user/BookmarkFolders';
 import { IUserBookmarkFolderTweetsResponse } from '../types/raw/user/BookmarkFolderTweets';
 import { IUserBookmarksResponse } from '../types/raw/user/Bookmarks';
+import { IUserChangePasswordResponse } from '../types/raw/user/ChangePassword';
 import { IUserDetailsResponse } from '../types/raw/user/Details';
 import { IUserDetailsBulkResponse } from '../types/raw/user/DetailsBulk';
 import { IUserFollowResponse } from '../types/raw/user/Follow';
@@ -56,6 +57,7 @@ import { IUserNotificationsResponse } from '../types/raw/user/Notifications';
 import { IUserProfileUpdateResponse } from '../types/raw/user/ProfileUpdate';
 import { IUserRecommendedResponse } from '../types/raw/user/Recommended';
 import { IUserSearchResponse } from '../types/raw/user/Search';
+import { IUserSettingsResponse } from '../types/raw/user/Settings';
 import { IUserSubscriptionsResponse } from '../types/raw/user/Subscriptions';
 import { IUserTweetsResponse } from '../types/raw/user/Tweets';
 import { IUserTweetsAndRepliesResponse } from '../types/raw/user/TweetsAndReplies';
@@ -98,8 +100,12 @@ export const Extractors = {
 	TWEET_LIKE: (response: ITweetLikeResponse): boolean => (response?.data?.favorite_tweet ? true : false),
 	TWEET_LIKERS: (response: ITweetLikersResponse): CursoredData<User> =>
 		new CursoredData<User>(response, BaseType.USER),
-	TWEET_POST: (response: ITweetPostResponse): string =>
-		response?.data?.create_tweet?.tweet_results?.result?.rest_id ?? undefined,
+	TWEET_POST: (response: ITweetPostResponse): string | undefined =>
+		response?.data?.create_tweet?.tweet_results?.result?.rest_id ??
+		response?.data?.create_note_tweet?.tweet_results?.result?.rest_id ??
+		undefined,
+	TWEET_POST_NOTE: (response: ITweetPostNoteResponse): string | undefined =>
+		response?.data?.notetweet_create?.tweet_results?.result?.rest_id ?? undefined,
 	TWEET_REPLIES: (response: ITweetDetailsResponse): CursoredData<Tweet> =>
 		new CursoredData<Tweet>(response, BaseType.TWEET),
 	TWEET_RETWEET: (response: ITweetRetweetResponse): boolean => (response?.data?.create_retweet ? true : false),
@@ -157,6 +163,12 @@ export const Extractors = {
 		new CursoredData<Tweet>(response, BaseType.TWEET),
 	USER_UNFOLLOW: (response: IUserUnfollowResponse): boolean => (response?.id ? true : false),
 	USER_PROFILE_UPDATE: (response: IUserProfileUpdateResponse): boolean => (response?.name ? true : false),
+	USER_PROFILE_IMAGE_UPDATE: (response: IUserProfileUpdateResponse): boolean =>
+		response?.profile_image_url || response?.profile_image_url_https ? true : false,
+	USER_PROFILE_BANNER_UPDATE: (response: IUserProfileUpdateResponse): boolean =>
+		!response || response?.profile_banner_url || response?.profile_banner_url_https ? true : false,
+	USER_USERNAME_CHANGE: (response: IUserSettingsResponse): string | undefined => response?.screen_name ?? undefined,
+	USER_PASSWORD_CHANGE: (response: IUserChangePasswordResponse): boolean => response?.status === 'ok',
 
 	/* eslint-enable @typescript-eslint/naming-convention */
 };
