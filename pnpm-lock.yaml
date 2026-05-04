@@ -36,8 +36,8 @@ importers:
         specifier: ^7.0.1
         version: 7.1.0
       x-client-transaction-id:
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: ^0.2.3
+        version: 0.2.3
     devDependencies:
       '@types/chrome':
         specifier: ^0.0.300
@@ -1470,8 +1470,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  x-client-transaction-id@0.2.0:
-    resolution: {integrity: sha512-E2EgeyQpeOLOk4z7OS+IDpj7xwiKeUQHly6L1dTG2YYCEGtR6JLa6Ft5ra3pB7bY5esPb6Pqokt1DQeRm73i5g==}
+  x-client-transaction-id@0.2.3:
+    resolution: {integrity: sha512-SgCpLpswNoUAJpphrKrouCByvBCOBWvBiGynQ8+Ioncc67uG5FafTFBpAtpEiUMhjAK/MRIQF578fl9C6BUfKg==}
 
   xml-name-validator@5.0.0:
     resolution: {integrity: sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==}
@@ -3115,7 +3115,7 @@ snapshots:
 
   ws@8.19.0: {}
 
-  x-client-transaction-id@0.2.0:
+  x-client-transaction-id@0.2.3:
     dependencies:
       linkedom: 0.18.12
     transitivePeerDependencies:
