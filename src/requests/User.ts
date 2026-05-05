@@ -243,20 +243,25 @@ export class UserRequests {
 	 * @param cursor - The cursor to the batch of bookmarks to fetch.
 	 */
 	public static bookmarks(count?: number, cursor?: string): AxiosRequestConfig {
+		// X 在 ~2026-02 把 Bookmarks 列表 operation 移除，重命名为 BookmarkSearchTimeline。
+		// 用空 rawQuery + querySource 即可拿到全部书签（按时间倒序）。
+		// 参考 main bundle: queryId=fHKoSa-2dbV1UbhUy3EvcA, operationName=BookmarkSearchTimeline。
 		return {
 			method: 'get',
-			// TODO: Bookmarks listing removed from Twitter bundle 2026-02-13
-			url: 'https://x.com/i/api/graphql/-LGfdImKeQz0xS_jjUwzlA/Bookmarks',
+			url: 'https://x.com/i/api/graphql/fHKoSa-2dbV1UbhUy3EvcA/BookmarkSearchTimeline',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
+					rawQuery: '',
 					count: count,
 					cursor: cursor,
-					includePromotedContent: false,
+					querySource: '',
 				}),
 				features: JSON.stringify({
 					rweb_video_screen_enabled: false,
+					rweb_cashtags_enabled: true,
 					profile_label_improvements_pcf_label_in_post_enabled: true,
+					responsive_web_profile_redirect_enabled: false,
 					rweb_tipjar_consumption_enabled: true,
 					verified_phone_label_enabled: true,
 					creator_subscriptions_tweet_preview_api_enabled: true,
@@ -267,28 +272,39 @@ export class UserRequests {
 					c9s_tweet_anatomy_moderator_badge_enabled: true,
 					responsive_web_grok_analyze_button_fetch_trends_enabled: false,
 					responsive_web_grok_analyze_post_followups_enabled: true,
-					responsive_web_jetfuel_frame: false,
+					responsive_web_jetfuel_frame: true,
 					responsive_web_grok_share_attachment_enabled: true,
+					responsive_web_grok_annotations_enabled: true,
 					articles_preview_enabled: true,
 					responsive_web_edit_tweet_api_enabled: true,
 					graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
 					view_counts_everywhere_api_enabled: true,
 					longform_notetweets_consumption_enabled: true,
 					responsive_web_twitter_article_tweet_consumption_enabled: true,
-					tweet_awards_web_tipping_enabled: false,
-					responsive_web_grok_show_grok_translated_post: false,
+					content_disclosure_indicator_enabled: true,
+					content_disclosure_ai_generated_indicator_enabled: true,
+					responsive_web_grok_show_grok_translated_post: true,
 					responsive_web_grok_analysis_button_from_backend: true,
-					creator_subscriptions_quote_tweet_preview_enabled: false,
+					post_ctas_fetch_enabled: true,
 					freedom_of_speech_not_reach_fetch_enabled: true,
-					responsive_web_grok_imagine_annotation_enabled: false,
-					responsive_web_grok_community_note_auto_translation_is_enabled: false,
-					responsive_web_profile_redirect_enabled: false,
 					standardized_nudges_misinfo: true,
 					tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
 					longform_notetweets_rich_text_read_enabled: true,
 					longform_notetweets_inline_media_enabled: true,
 					responsive_web_grok_image_annotation_enabled: true,
+					responsive_web_grok_imagine_annotation_enabled: true,
+					responsive_web_grok_community_note_auto_translation_is_enabled: true,
 					responsive_web_enhance_cards_enabled: false,
+				}),
+				fieldToggles: JSON.stringify({
+					withPayments: false,
+					withAuxiliaryUserLabels: false,
+					withArticleRichContentState: true,
+					withArticlePlainText: false,
+					withArticleSummaryText: true,
+					withArticleVoiceOver: false,
+					withGrokAnalyze: false,
+					withDisallowedReplyControls: false,
 				}),
 				/* eslint-enable @typescript-eslint/naming-convention */
 			},
