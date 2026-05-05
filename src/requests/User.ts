@@ -255,7 +255,10 @@ export class UserRequests {
 					rawQuery: '',
 					count: count,
 					cursor: cursor,
-					querySource: '',
+					// querySource 必须是 X 的合法 enum 值，空字符串会触发
+					// GRAPHQL_VALIDATION_FAILED on path ["variable","querySource"]。
+					// 'typed_query' 是 search 类 timeline 的通用默认值。
+					querySource: 'typed_query',
 				}),
 				features: JSON.stringify({
 					rweb_video_screen_enabled: false,
