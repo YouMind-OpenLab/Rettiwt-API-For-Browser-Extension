@@ -40,7 +40,7 @@ export class User implements IUser {
 		this.userName = user.core?.screen_name ?? user.legacy.screen_name ?? '';
 		this.fullName = user.core?.name ?? user.legacy.name ?? '';
 		this.createdAt = new Date(user.core?.created_at ?? user.legacy.created_at ?? 0).toISOString();
-		this.description = user.legacy.description.length ? user.legacy.description : undefined;
+		this.description = user.legacy.description?.length ? user.legacy.description : undefined;
 		this.isFollowed = user.legacy.following;
 		this.isFollowing = user.legacy.followed_by;
 		this.isVerified = user.is_blue_verified;
@@ -49,7 +49,9 @@ export class User implements IUser {
 		this.followingsCount = user.legacy.friends_count;
 		this.statusesCount = user.legacy.statuses_count;
 		this.location = user.location?.location ?? user.legacy.location ?? undefined;
-		this.pinnedTweet = user.legacy.pinned_tweet_ids_str[0];
+		// X 偶尔会在 bookmarks 等响应里给 user 缺失 pinned_tweet_ids_str —— 直接 [0]
+		// 会抛 TypeError 然后被上层吞掉，导致 fetchBookmarks 全部失败走 fallback。
+		this.pinnedTweet = user.legacy.pinned_tweet_ids_str?.[0];
 		this.profileBanner = user.legacy.profile_banner_url;
 		this.profileImage = user.avatar?.image_url ?? user.legacy.profile_image_url_https ?? '';
 	}
