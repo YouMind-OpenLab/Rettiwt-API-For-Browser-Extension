@@ -243,28 +243,26 @@ export class UserRequests {
 	 * @param cursor - The cursor to the batch of bookmarks to fetch.
 	 */
 	public static bookmarks(count?: number, cursor?: string): AxiosRequestConfig {
-		// X 在 ~2026-02 把 Bookmarks 列表 operation 移除，重命名为 BookmarkSearchTimeline。
-		// 用空 rawQuery + querySource 即可拿到全部书签（按时间倒序）。
-		// 参考 main bundle: queryId=fHKoSa-2dbV1UbhUy3EvcA, operationName=BookmarkSearchTimeline。
+		// 关于 endpoint 选择：
+		// X 的 web client 在 ~2026-02 之后不再使用 `Bookmarks` operation —— 改成了
+		// `BookmarkSearchTimeline`（一个 search-style timeline，需要非空 rawQuery）。
+		// 但 X 的 backend GraphQL 服务**依然在 serve** 老的 `Bookmarks` operation，
+		// 它返回完整的、按时间倒序的所有书签，正是我们需要的。所以反向 API 继续用
+		// 老 endpoint 是最稳的选择。
+		// 实测：HTTP 200 + 完整 bookmark_timeline_v2 响应，结构和过去一致。
 		return {
 			method: 'get',
-			url: 'https://x.com/i/api/graphql/fHKoSa-2dbV1UbhUy3EvcA/BookmarkSearchTimeline',
+			url: 'https://x.com/i/api/graphql/-LGfdImKeQz0xS_jjUwzlA/Bookmarks',
 			params: {
 				/* eslint-disable @typescript-eslint/naming-convention */
 				variables: JSON.stringify({
-					rawQuery: '',
 					count: count,
 					cursor: cursor,
-					// querySource 必须是 X 的合法 enum 值，空字符串会触发
-					// GRAPHQL_VALIDATION_FAILED on path ["variable","querySource"]。
-					// 'typed_query' 是 search 类 timeline 的通用默认值。
-					querySource: 'typed_query',
+					includePromotedContent: false,
 				}),
 				features: JSON.stringify({
 					rweb_video_screen_enabled: false,
-					rweb_cashtags_enabled: true,
 					profile_label_improvements_pcf_label_in_post_enabled: true,
-					responsive_web_profile_redirect_enabled: false,
 					rweb_tipjar_consumption_enabled: true,
 					verified_phone_label_enabled: true,
 					creator_subscriptions_tweet_preview_api_enabled: true,
@@ -275,39 +273,28 @@ export class UserRequests {
 					c9s_tweet_anatomy_moderator_badge_enabled: true,
 					responsive_web_grok_analyze_button_fetch_trends_enabled: false,
 					responsive_web_grok_analyze_post_followups_enabled: true,
-					responsive_web_jetfuel_frame: true,
+					responsive_web_jetfuel_frame: false,
 					responsive_web_grok_share_attachment_enabled: true,
-					responsive_web_grok_annotations_enabled: true,
 					articles_preview_enabled: true,
 					responsive_web_edit_tweet_api_enabled: true,
 					graphql_is_translatable_rweb_tweet_is_translatable_enabled: true,
 					view_counts_everywhere_api_enabled: true,
 					longform_notetweets_consumption_enabled: true,
 					responsive_web_twitter_article_tweet_consumption_enabled: true,
-					content_disclosure_indicator_enabled: true,
-					content_disclosure_ai_generated_indicator_enabled: true,
-					responsive_web_grok_show_grok_translated_post: true,
+					tweet_awards_web_tipping_enabled: false,
+					responsive_web_grok_show_grok_translated_post: false,
 					responsive_web_grok_analysis_button_from_backend: true,
-					post_ctas_fetch_enabled: true,
+					creator_subscriptions_quote_tweet_preview_enabled: false,
 					freedom_of_speech_not_reach_fetch_enabled: true,
+					responsive_web_grok_imagine_annotation_enabled: false,
+					responsive_web_grok_community_note_auto_translation_is_enabled: false,
+					responsive_web_profile_redirect_enabled: false,
 					standardized_nudges_misinfo: true,
 					tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: true,
 					longform_notetweets_rich_text_read_enabled: true,
 					longform_notetweets_inline_media_enabled: true,
 					responsive_web_grok_image_annotation_enabled: true,
-					responsive_web_grok_imagine_annotation_enabled: true,
-					responsive_web_grok_community_note_auto_translation_is_enabled: true,
 					responsive_web_enhance_cards_enabled: false,
-				}),
-				fieldToggles: JSON.stringify({
-					withPayments: false,
-					withAuxiliaryUserLabels: false,
-					withArticleRichContentState: true,
-					withArticlePlainText: false,
-					withArticleSummaryText: true,
-					withArticleVoiceOver: false,
-					withGrokAnalyze: false,
-					withDisallowedReplyControls: false,
 				}),
 				/* eslint-enable @typescript-eslint/naming-convention */
 			},
